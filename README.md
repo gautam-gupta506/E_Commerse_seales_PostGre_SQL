@@ -257,19 +257,19 @@ SELECT PRODUCT_CATEGORY, COUNT(TRANSACTION_ID) AS TOTAL_CUSTOME
 FROM E_COMMERCE
 GROUP BY PRODUCT_CATEGORY;
 ```
-##Findings
+## Findings
 - **Customer Demographics**: SQL queries revealed that customers belong to different age groups, with major sales concentrated in categories like Clothing and Beauty.
 - **High-Value Transactions**: By filtering sales amounts, it was observed that multiple transactions exceeded 1000, indicating premium purchases.
 - **Sales Trends**: Using date-based queries, monthly sales analysis highlighted peak seasons and declining periods.
 - **Customer Insights**: SQL aggregations helped identify top-spending customers and the most purchased product categories.
 
-##Reports Generated
+## Reports Generated
 
 - **Sales Summary**: Query outputs included total sales revenue, average order value, and category-wise sales performance.
 - **Trend Analysis**: Time-series SQL queries provided insights into monthly sales, weekly sales distribution, and seasonal patterns.
 - **Customer Insights**: Reports included unique customers per year, top buyers, and preferred payment methods.
 
-##Conclusion
+## Conclusion
 
 This SQL-based project demonstrates how to use queries for data cleaning, aggregation, and business insights. It covers database design, query optimization, and real-world analysis such as sales by year, top products, payment methods, and customer behavior.
 The findings provide actionable insights into sales patterns, product performance, and customer demographics, helping businesses make data-driven decisions.
