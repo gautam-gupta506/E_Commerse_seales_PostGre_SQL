@@ -22,8 +22,7 @@ This project is designed to demonstrate SQL skills and techniques typically used
 - **Database Creation**: The project starts by creating a database named `e_commerce_data`.
 - **Table Creation**: A table named `E_commerce` is created to store the sales data. The table structure includes columns for transaction ID, sale date, sale time, customer ID, gender, age, product category, quantity sold, price per unit, cost of goods sold (COGS), and total sale amount.
 
-```
-sql
+```sql
 CREATE DATABASE e_commerce_data;
 
 -- Create Table E_commerce selaes.
@@ -44,7 +43,7 @@ Product_Category, Purchase_Amount,
 Payment_Method, Transaction_Date)
 from 'D:/E_Commerce_datasets.csv'
 Delimiter ',' CSV header;
-
+```
 ### 2. Data Exploration & Cleaning
 
 - **check null values**: Determine the total number of records in the dataset.
@@ -52,8 +51,7 @@ Delimiter ',' CSV header;
 - **Category Count**: Identify all unique product categories in the dataset.
 - **Null Value Check**: Check for any null values in the dataset and delete records with missing data.
 
-```
-sql
+```sql
 SELECT COUNT(*) FROM retail_sales;
 SELECT COUNT(DISTINCT customer_id) FROM retail_sales;
 SELECT DISTINCT category FROM retail_sales;
