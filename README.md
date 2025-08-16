@@ -3,6 +3,7 @@
 ## Project Overview
 
 **Project Title**: E_Commerce_Sales_analysis_SQL 
+
 **Level**: Beginner  
 **Database**: `e_commerce_data`
 
