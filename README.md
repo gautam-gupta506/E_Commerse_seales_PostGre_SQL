@@ -52,158 +52,227 @@ Delimiter ',' CSV header;
 - **Null Value Check**: Check for any null values in the dataset and delete records with missing data.
 
 ```sql
-SELECT COUNT(*) FROM retail_sales;
-SELECT COUNT(DISTINCT customer_id) FROM retail_sales;
-SELECT DISTINCT category FROM retail_sales;
+--CLEANNING
 
-SELECT * FROM retail_sales
-WHERE 
-    sale_date IS NULL OR sale_time IS NULL OR customer_id IS NULL OR 
-    gender IS NULL OR age IS NULL OR category IS NULL OR 
-    quantity IS NULL OR price_per_unit IS NULL OR cogs IS NULL;
+-- FOR TRANSACTION_ID.
+SELECT COUNT(TRANSACTION_ID) FROM E_COMMERCE
+WHERE TRANSACTION_ID IS NULL;
+--FOR USER_NAME
+SELECT COUNT(USER_NAME) FROM E_COMMERCE
+WHERE USER_NAME IS NULL;
+-- FOR AGE
+SELECT COUNT(AGE) FROM E_COMMERCE
+WHERE AGE IS NULL;
+--FOR Country Product_Category
+SELECT COUNT(Product_Category) FROM E_COMMERCE
+WHERE Product_Category IS NULL;
+-- FOR Purchase_Amount
+SELECT COUNT(Purchase_Amount) FROM E_COMMERCE
+WHERE Purchase_Amount IS NULL;
+-- FOR Payment_Method
+SELECT COUNT(Payment_Method) FROM E_COMMERCE
+WHERE Payment_Method IS NULL;
+-- FOR Transaction_Date.
+SELECT COUNT(Transaction_Date) FROM E_COMMERCE
+WHERE Transaction_Date IS NULL;
 
-DELETE FROM retail_sales
-WHERE 
-    sale_date IS NULL OR sale_time IS NULL OR customer_id IS NULL OR 
-    gender IS NULL OR age IS NULL OR category IS NULL OR 
-    quantity IS NULL OR price_per_unit IS NULL OR cogs IS NULL;
+--PREPROSSING
+-- EXTRACT DATA FROM TRANSACTION DATE.
+SELECT TRANSACTION_DATE FROM E_COMMERCE;
+
+ALTER TABLE E_COMMERCE
+DROP COLUMN WEEK_DAY,
+DROP COLUMN MONTH_NAME,
+DROP COLUMN IF EXISTS YEAR;
+-- ADD NEW COLUMNS WEEK_DAY NAE AND MONTH NAME EXTRACT FROM TEANSACTION_DATE.
+ALTER TABLE E_COMMERCE
+ADD COLUMN YEAR NUMERIC(4),
+ADD COLUMN WEEK_DAY VARCHAR(10),
+ADD COLUMN MONTH_NAME VARCHAR(10);
+--EXTRACT AND FILL THE VALUES IN THE CELL.
+UPDATE E_commerce
+SET 
+    week_day   = TRIM(TO_CHAR(Transaction_Date, 'Day')),
+    month_name = TRIM(TO_CHAR(Transaction_Date, 'Month')),
+    "year"     = EXTRACT(YEAR FROM Transaction_Date);	
+-- CHECK UNIQUE VALUES IN A PARTICULAR COLUMN	
+SELECT DISTINCT PAYMENT_METHOD FROM E_COMMERCE;
+SELECT DISTINCT COUNTRY FROM E_COMMERCE;
+SELECT DISTINCT PRODUCT_CATEGORY FROM E_COMMERCE;
+-- CHECK UNIQUE AGE AND ARRANGE ASCINDING ORDER
+SELECT DISTINCT AGE FROM E_COMMERCE
+ORDER BY AGE ASC;
+--ADD NEW COLUNS ON THE AGE GROUP.
+ALTER TABLE E_commerce
+ADD COLUMN AGE_GROUP VARCHAR(20);
+-- ENTER DATA INTO COLUMNS.
+UPDATE E_commerce
+SET 
+	AGE_GROUP = CASE
+	WHEN AGE BETWEEN 18 AND 28 THEN 'TEEN_AGERS'
+	WHEN AGE>=29 AND AGE<=37 THEN 'ADULTS'
+	WHEN AGE>=38 THEN 'SENIOR CITIZENS'
+	end;
+--DROP COLUMNS.	
+ALTER TABLE E_COMMERCE
+DROP COLUMN AGE_GROUP;
+-- CHECK NULL VALUES
+SELECT COUNT(AGE_GROUP) FROM E_commerce
+WHERE AGE_GROUP IS NULL;
+
+--DISPLAY THE TABLE
+SELECT * FROM E_COMMERCE;
+
+-- ASCIENDING ORDER ON THE BASED ON TRANSACTION_ID
+SELECT * FROM E_COMMERCE 
+ORDER BY TRANSACTION_ID ASC;
 ```
 
 ### 3. Data Analysis & Findings
 
 The following SQL queries were developed to answer specific business questions:
+1. What is the total sales revenue per year?
+2. Which are the top 5 products based on sales revenue?
+3. What are the top 3 payment methods based on sales revenue?
+4. Which are the top 5 countries based on sales revenue?
+5. Which are the top 5 product categories based on sales revenue, broken down by country?
+6. What is the sales distribution across different customer age groups?
+7. How much sales revenue is generated per month?
+8. How much sales revenue is generated per day of the week?
+9. How many unique customers purchase each year (total customers per year)?
+10. Which month has the highest customer visits and sales revenue?
+11. Which type of product is purchased the most by customers?
 
-1. **Write a SQL query to retrieve all columns for sales made on '2022-11-05**:
+1. What is the total sales revenue per year?
 ```sql
-SELECT *
-FROM retail_sales
-WHERE sale_date = '2022-11-05';
-```
+SELECT SUM(PURCHASE_AMOUNT),year
+FROM E_commerce
+GROUP BY YEAR;
 
-2. **Write a SQL query to retrieve all transactions where the category is 'Clothing' and the quantity sold is more than 4 in the month of Nov-2022**:
+
+```
+2. Which are the top 5 products based on sales revenue?
 ```sql
-SELECT 
-  *
-FROM retail_sales
-WHERE 
-    category = 'Clothing'
-    AND 
-    TO_CHAR(sale_date, 'YYYY-MM') = '2022-11'
-    AND
-    quantity >= 4
+SELECT  PRODUCT_CATEGORY,SUM(PURCHASE_AMOUNT) AS TOTAL_AMOUNT
+FROM E_commerce
+GROUP BY PRODUCT_CATEGORY 
+ORDER BY TOTAL_AMOUNT DESC LIMIT 5;
 ```
-
-3. **Write a SQL query to calculate the total sales (total_sale) for each category.**:
+3. What are the top 3 payment methods based on sales revenue?
 ```sql
-SELECT 
-    category,
-    SUM(total_sale) as net_sale,
-    COUNT(*) as total_orders
-FROM retail_sales
-GROUP BY 1
+SELECT  PAYMENT_METHOD,SUM(PURCHASE_AMOUNT) AS TOTAL_AMOUNT
+FROM E_commerce
+GROUP BY PAYMENT_METHOD 
+ORDER BY TOTAL_AMOUNT DESC LIMIT 3;
 ```
-
-4. **Write a SQL query to find the average age of customers who purchased items from the 'Beauty' category.**:
+4. Which are the top 5 countries based on sales revenue?
 ```sql
-SELECT
-    ROUND(AVG(age), 2) as avg_age
-FROM retail_sales
-WHERE category = 'Beauty'
+SELECT  COUNTRY,SUM(PURCHASE_AMOUNT) AS TOTAL_AMOUNT
+FROM E_commerce
+GROUP BY COUNTRY 
+ORDER BY TOTAL_AMOUNT DESC LIMIT 5;
 ```
+5. Which are the top 5 product categories based on sales revenue, broken down by country?
 
-5. **Write a SQL query to find all transactions where the total_sale is greater than 1000.**:
 ```sql
-SELECT * FROM retail_sales
-WHERE total_sale > 1000
+SELECT  PRODUCT_CATEGORY,COUNTRY,SUM(PURCHASE_AMOUNT) AS TOTAL_AMOUNT
+FROM E_commerce
+GROUP BY PRODUCT_CATEGORY, COUNTRY
+ORDER BY TOTAL_AMOUNT DESC LIMIT 5;
 ```
-
-6. **Write a SQL query to find the total number of transactions (transaction_id) made by each gender in each category.**:
+6. What is the sales distribution across different customer age groups?
 ```sql
-SELECT 
-    category,
-    gender,
-    COUNT(*) as total_trans
-FROM retail_sales
-GROUP 
-    BY 
-    category,
-    gender
-ORDER BY 1
+SELECT  AGE_GROUP,SUM(PURCHASE_AMOUNT) AS TOTAL_AMOUNT
+FROM E_commerce
+GROUP BY AGE_GROUP
+ORDER BY TOTAL_AMOUNT DESC LIMIT 5;
 ```
-
-7. **Write a SQL query to calculate the average sale for each month. Find out best selling month in each year**:
+7. How much sales revenue is generated per month?
 ```sql
-SELECT 
-       year,
-       month,
-    avg_sale
-FROM 
-(    
-SELECT 
-    EXTRACT(YEAR FROM sale_date) as year,
-    EXTRACT(MONTH FROM sale_date) as month,
-    AVG(total_sale) as avg_sale,
-    RANK() OVER(PARTITION BY EXTRACT(YEAR FROM sale_date) ORDER BY AVG(total_sale) DESC) as rank
-FROM retail_sales
-GROUP BY 1, 2
-) as t1
-WHERE rank = 1
+SELECT  MONTH_NAME,SUM(PURCHASE_AMOUNT) AS TOTAL_AMOUNT
+FROM E_commerce
+GROUP BY MONTH_NAME
+ORDER BY 
+    CASE TRIM(MONTH_NAME)
+        WHEN 'January' THEN 1
+        WHEN 'February' THEN 2
+        WHEN 'March' THEN 3
+        WHEN 'April' THEN 4
+        WHEN 'May' THEN 5
+        WHEN 'June' THEN 6
+        WHEN 'July' THEN 7
+		WHEN 'August' THEN 8
+		WHEN 'September' THEN 9
+		WHEN 'October' THEN 10
+		WHEN 'November' THEN 11
+		WHEN 'Decembe' THEN 12
+    END; 
 ```
-
-8. **Write a SQL query to find the top 5 customers based on the highest total sales **:
+8. How much sales revenue is generated per day of the week?
 ```sql
-SELECT 
-    customer_id,
-    SUM(total_sale) as total_sales
-FROM retail_sales
-GROUP BY 1
-ORDER BY 2 DESC
-LIMIT 5
+SELECT  WEEK_DAY,SUM(PURCHASE_AMOUNT) AS TOTAL_AMOUNT
+FROM E_commerce
+GROUP BY WEEK_DAY
+ORDER BY 
+    CASE TRIM(week_day)
+        WHEN 'Monday' THEN 1
+        WHEN 'Tuesday' THEN 2
+        WHEN 'Wednesday' THEN 3
+        WHEN 'Thursday' THEN 4
+        WHEN 'Friday' THEN 5
+        WHEN 'Saturday' THEN 6
+        WHEN 'Sunday' THEN 7
+    END; 
 ```
-
-9. **Write a SQL query to find the number of unique customers who purchased items from each category.**:
+9. How many unique customers purchase each year (total customers per year)?
 ```sql
-SELECT 
-    category,    
-    COUNT(DISTINCT customer_id) as cnt_unique_cs
-FROM retail_sales
-GROUP BY category
+SELECT YEAR,COUNT(TRANSACTION_ID) AS TOTAL
+FROM E_COMMERCE
+GROUP BY YEAR;
 ```
-
-10. **Write a SQL query to create each shift and number of orders (Example Morning <12, Afternoon Between 12 & 17, Evening >17)**:
+10. Which month has the highest customer visits and sales revenue?
 ```sql
-WITH hourly_sale
-AS
-(
-SELECT *,
-    CASE
-        WHEN EXTRACT(HOUR FROM sale_time) < 12 THEN 'Morning'
-        WHEN EXTRACT(HOUR FROM sale_time) BETWEEN 12 AND 17 THEN 'Afternoon'
-        ELSE 'Evening'
-    END as shift
-FROM retail_sales
-)
-SELECT 
-    shift,
-    COUNT(*) as total_orders    
-FROM hourly_sale
-GROUP BY shift
+SELECT MONTH_NAME,COUNT(TRANSACTION_ID) AS TOTAL
+FROM E_COMMERCE
+GROUP BY MONTH_NAME
+ORDER BY 
+    CASE TRIM(MONTH_NAME)
+        WHEN 'January' THEN 1
+        WHEN 'February' THEN 2
+        WHEN 'March' THEN 3
+        WHEN 'April' THEN 4
+        WHEN 'May' THEN 5
+        WHEN 'June' THEN 6
+        WHEN 'July' THEN 7
+		WHEN 'August' THEN 8
+		WHEN 'September' THEN 9
+		WHEN 'October' THEN 10
+		WHEN 'November' THEN 11
+		WHEN 'Decembe' THEN 12
+    END; 
 ```
+11. Which type of product is purchased the most by customers?
+```sql
+SELECT PRODUCT_CATEGORY, COUNT(TRANSACTION_ID) AS TOTAL_CUSTOME
+FROM E_COMMERCE
+GROUP BY PRODUCT_CATEGORY;
+```
+##Findings
+- **Customer Demographics**: SQL queries revealed that customers belong to different age groups, with major sales concentrated in categories like Clothing and Beauty.
+- **High-Value Transactions**: By filtering sales amounts, it was observed that multiple transactions exceeded 1000, indicating premium purchases.
+- **Sales Trends**: Using date-based queries, monthly sales analysis highlighted peak seasons and declining periods.
+- **Customer Insights**: SQL aggregations helped identify top-spending customers and the most purchased product categories.
 
-## Findings
+##Reports Generated
 
-- **Customer Demographics**: The dataset includes customers from various age groups, with sales distributed across different categories such as Clothing and Beauty.
-- **High-Value Transactions**: Several transactions had a total sale amount greater than 1000, indicating premium purchases.
-- **Sales Trends**: Monthly analysis shows variations in sales, helping identify peak seasons.
-- **Customer Insights**: The analysis identifies the top-spending customers and the most popular product categories.
+- **Sales Summary**: Query outputs included total sales revenue, average order value, and category-wise sales performance.
+- **Trend Analysis**: Time-series SQL queries provided insights into monthly sales, weekly sales distribution, and seasonal patterns.
+- **Customer Insights**: Reports included unique customers per year, top buyers, and preferred payment methods.
 
-## Reports
+##Conclusion
 
-- **Sales Summary**: A detailed report summarizing total sales, customer demographics, and category performance.
-- **Trend Analysis**: Insights into sales trends across different months and shifts.
-- **Customer Insights**: Reports on top customers and unique customer counts per category.
+This SQL-based project demonstrates how to use queries for data cleaning, aggregation, and business insights. It covers database design, query optimization, and real-world analysis such as sales by year, top products, payment methods, and customer behavior.
+The findings provide actionable insights into sales patterns, product performance, and customer demographics, helping businesses make data-driven decisions.
 
-## Conclusion
 
-This project serves as a comprehensive introduction to SQL for data analysts, covering database setup, data cleaning, exploratory data analysis, and business-driven SQL queries. The findings from this project can help drive business decisions by understanding sales patterns, customer behavior, and product performance.
 
